@@ -1,7 +1,6 @@
+<%@page import="org.apache.log4j.Logger"%>
 <%@ include file="/html/paygrade/init.jsp"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Edit PayGrade</title>
 <portlet:actionURL var="savepaygradecurrency" name="savePayGradeCurrency">
@@ -62,32 +61,14 @@ AUI().use(
   }
 );
 
-
-
-
-AUI().use(
-  'aui-autocomplete',
-  function (A) {
-    var continents = ['Doller', 'Euro', 'Dinar', 'Africa', 'Rupie', 'Indian Rupee'];
-
-    new A.AutoComplete(
-      {
-        contentBox: '#myAutoComplete',
-        dataSource: continents
-      }
-    ).render();
-  }
-);
-
 </aui:script>
 
-</head>
-<body>
+<% Logger log=Logger.getLogger(this.getClass().getName());%>
 <%
 
 PayGrade paygrade3 =(PayGrade) portletSession.getAttribute("paygrade3");
 Long paygradeid = paygrade3.getPayGradeId();
-System.out.println("id ======= " +paygradeid);
+log.info("id ======= " +paygradeid);
 PayGradeCurrency editpaygradecurrency = (PayGradeCurrency)portletSession.getAttribute("editpaygradecurrency");
 %>
 <div class="panel">
@@ -101,7 +82,7 @@ PayGradeCurrency editpaygradecurrency = (PayGradeCurrency)portletSession.getAttr
 				<div class="control-group">
 					<label class="control-label">Name<em>*</em> </label>
 					<div class="controls">
-					<input name="<portlet:namespace/>paygradeName" id="paygrade" type="text" required = "required" readonly="readonly" value="<%=paygrade3.getPayGradeName()%>">
+					<input name="<portlet:namespace/>paygradeName" id="paygrade" type="text" readonly="readonly" value="<%=paygrade3.getPayGradeName()%>">
 					</div>
 				</div>
 			</div>
@@ -118,24 +99,39 @@ PayGradeCurrency editpaygradecurrency = (PayGradeCurrency)portletSession.getAttr
 			<div class="form-horizontal">
 		<aui:input name="paygradeId" type="hidden" id="paygradeId"  value="<%=paygrade3.getPayGradeId()%>"/>
 		<aui:input name="paygradecurrencyId" type="hidden" id="paygradecurrencyId"  value="<%=editpaygradecurrency.getPayGradeCurrencyId()%>"/>
-		      <div class="control-group">
+		    
 		      <label class="control-label">Currency:<em>*</em> </label>
-		      <div class="controls">
-		      <input name="<portlet:namespace/>currency" id="myAutoComplete" required="required" type="text" value="<%=editpaygradecurrency.getCurrency()%>">
-		</div>
-		</div>
-		<div class="control-group">
-		<label class="control-label">Minimum Salary</label>
-		<div class="controls">
-		 <input name="<portlet:namespace/>minSalary" id="paygrade" type="text" value="<%=editpaygradecurrency.getMinSalary()%>">
-		</div>
-		</div>
-		<div class="control-group">
-		<label class="control-label">Maximum Salary</label>	
-		 <div class="controls">
-		 <input name="<portlet:namespace/>maxSalary" id="paygrade" type="text" value="<%=editpaygradecurrency.getMaxSalary()%>">
-		</div>
-		</div>
+		     
+		      <aui:input name="currency" label="" id="myAutoComplete"  type="text" value="<%=editpaygradecurrency.getCurrency()%>"/>
+		
+		
+		 <aui:input name="minSalary" label="Minimum Salary" id="minSalary" type="text" value="<%=editpaygradecurrency.getMinSalary()%>">
+		 <aui:validator name="digits"></aui:validator>
+		 </aui:input>
+
+	
+		 <aui:input name="maxSalary" label="Maximum Salary" id="maxSalary" type="text" value="<%=editpaygradecurrency.getMaxSalary()%>">
+		   <aui:validator name="digits"></aui:validator>
+				 	   <aui:validator name="custom" errorMessage="Maximum salary should be greater than minimum salary">
+				 	     function(val,fieldNode,ruleValue){
+				 	      
+				 	       var result=false;
+				 	       var min= A.one("#<portlet:namespace/>minSalary").get('value');
+				 	       var max=val;
+				 	       if(Number(max) <= Number(min)){
+				 	         
+				 	         result=false;
+				 	       }else{
+				 	         result=true;
+				 	    
+				 	       }
+				 	       return result;
+				 	     }
+				 	   </aui:validator>
+		 
+		 
+		 </aui:input>
+		
 		<div class="control-group">
 			<div class="controls">
 				<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
@@ -166,7 +162,7 @@ iteratorURL.setParameter("mvcPath", "/html/paygrade/editpaygrade.jsp");
 		paygradecurrencyquery.add(PropertyFactoryUtil.forName("groupId").eq(themeDisplay.getLayout().getGroup().getGroupId()));
 		List<PayGradeCurrency> currencyList= PayGradeCurrencyLocalServiceUtil.dynamicQuery(paygradecurrencyquery);
 		results = ListUtil.subList(currencyList, searchContainer.getStart(), searchContainer.getEnd());
-		System.out.println("results == " +results.size());
+		log.info("results == " +results.size());
 		total = currencyList!=null && currencyList.size()!=0?currencyList.size():0;
 		pageContext.setAttribute("results", results);
 		pageContext.setAttribute("total", total);
@@ -190,9 +186,3 @@ iteratorURL.setParameter("mvcPath", "/html/paygrade/editpaygrade.jsp");
 	
  </div>
 </div>
-
-</body>
-
-
-
-</html>

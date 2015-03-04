@@ -1,14 +1,22 @@
+<%@ taglib uri="http://liferay.com/tld/aui" prefix="aui" %>
+<%@page import="org.apache.log4j.Logger"%>
 <%@ include file="/html/jobcategory/init.jsp"%>
-<html>
-<head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-<title>jobcategory</title>
 <portlet:actionURL var="savejobcategory" name="saveJobcategory">
 </portlet:actionURL>
 <portlet:resourceURL var="deletejobcategory" id="deleteJobcategory"/>
 <portlet:renderURL var="listview">
 	<portlet:param name="mvcPath" value="/html/jobcategory/add.jsp" />
 </portlet:renderURL>
+<aui:script>
+AUI().ready('event', 'node','transition',function(A){
+  A.one('#addJobcategoryForm').hide();
+  setTimeout(function(){
+    A.one('#addJobcategoryMessage').transition('fadeOut');
+    A.one('#addJobcategoryMessage').hide();
+},2000)
+ });
+ </aui:script>
 <aui:script>
 AUI().use(
   'aui-node',
@@ -67,19 +75,11 @@ AUI().use(
       function() {
          A.one('#jobadddelete').hide();
          A.one('#addJobcategoryForm').show();
-                     
+         A.one('#jobcategoryName').focus();           
       }
     );
   }
 );
-
-AUI().ready('event', 'node','transition',function(A){
-  A.one('#addJobcategoryForm').hide();
-  setTimeout(function(){
-    A.one('#addJobcategoryMessage').transition('fadeOut');
-},1000)
- });
-
 
 AUI().use(
   'aui-node',
@@ -97,9 +97,7 @@ AUI().use(
 );
 
 </aui:script>
-</head>
-
-<body>
+<% Logger log=Logger.getLogger(this.getClass().getName());%>
 <% if(SessionMessages.contains(renderRequest.getPortletSession(),"jobcategoryName-empty-error")){%>
 <p id="addJobcategoryMessage" class="alert alert-error"><liferay-ui:message key="Please Enter JobcategoryName"/></p>
 <%} 
@@ -126,7 +124,7 @@ AUI().use(
 						<aui:input name="jobcategoryId" type="hidden" id="jobcategoryId" />
 						<div class="form-inline">
 							<label>Job Category: </label>
-							<input name="<portlet:namespace/>jobcategory" type="text">
+							<input name="<portlet:namespace/>jobcategory" id="jobcategoryName" type="text">
 							<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
 							<button  type="reset" id ="jobcategorycancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 						</div>
@@ -137,7 +135,7 @@ AUI().use(
 	</div>
 
 	
-</body>
+
 
 <%
 
@@ -148,8 +146,9 @@ RowChecker rowChecker = new RowChecker(renderResponse);
 PortalPreferences portalPrefs = PortletPreferencesFactoryUtil.getPortalPreferences(request); 
 String sortByCol = ParamUtil.getString(request, "orderByCol"); 
 String sortByType = ParamUtil.getString(request, "orderByType"); 
-System.out.println("sortByCol == " +sortByCol);
-System.out.println("sortByType == " +sortByType);
+log.info("JobCategory jsp...");
+log.info("sortByCol == " +sortByCol);
+log.info("sortByType == " +sortByType);
 if (Validator.isNotNull(sortByCol ) && Validator.isNotNull(sortByType )) { 
 	System.out.println("if block...");
  
@@ -162,9 +161,9 @@ portalPrefs.setValue("NAME_SPACE", "sort-by-type", sortByCol);
 	sortByType = portalPrefs.getValue("NAME_SPACE", "sort-by-type ", "asc");   
 }
 
-System.out.println("after....");
-System.out.println("sortByCol == " +sortByCol);
-System.out.println("sortByType == " +sortByType);
+log.info("after....");
+log.info("sortByCol == " +sortByCol);
+log.info("sortByType == " +sortByType);
 long groupID=themeDisplay.getLayout().getGroup().getGroupId();
 DynamicQuery dynamicQuery=DynamicQueryFactoryUtil.forClass(JobCategory.class,PortletClassLoaderUtil
 		.getClassLoader());
@@ -182,16 +181,27 @@ List<JobCategory> jobCategoryList=JobCategoryLocalServiceUtil.dynamicQuery(dynam
 	deltaConfigurable="true" iteratorURL="<%=iteratorURL%>">
 	<liferay-ui:search-container-results>
 
-		<%
+		<%  
 		
-            OrderByComparator orderByComparator = CustomComparatorUtil.getJobcategoryrOrderByComparator(sortByCol, sortByType);         
-  
-           Collections.sort(jobCategoryList,orderByComparator);
-  
-          results = ListUtil.subList(jobCategoryList, searchContainer.getStart(), searchContainer.getEnd());
-               total = jobCategoryList!=null && jobCategoryList.size()!=0?jobCategoryList.size():0;
-               pageContext.setAttribute("results", results);
-               pageContext.setAttribute("total", total);
+		List<JobCategory> pageList = ListUtil.subList(jobCategoryList, searchContainer.getStart(), searchContainer.getEnd());
+        OrderByComparator orderByComparator = CustomComparatorUtil.getJobcategoryrOrderByComparator(sortByCol, sortByType);         
+
+       Collections.sort(pageList,orderByComparator);
+			if(jobCategoryList.size()>5){
+      results = ListUtil.subList(jobCategoryList, searchContainer.getStart(), searchContainer.getEnd());
+			}
+			else{
+				results = jobCategoryList;
+			}
+        log.info("results == " +results);
+       
+ 
+           total = jobCategoryList.size();
+           log.info("total == " +total);
+           pageContext.setAttribute("results", results);
+           pageContext.setAttribute("total", total);
+		
+          
  %>
 
 	</liferay-ui:search-container-results>
@@ -210,4 +220,3 @@ List<JobCategory> jobCategoryList=JobCategoryLocalServiceUtil.dynamicQuery(dynam
 </liferay-ui:search-container>
 </div>
 
-</html>

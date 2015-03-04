@@ -7,72 +7,11 @@
 	<portlet:param name="mvcPath" value="/html/educationaction/addEducation.jsp" />
 </portlet:renderURL>
 <aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#deleteeducation');
-    node.on(
-      'click',
-      function() {
-     var idArray = [];
-      A.all('input[name=<portlet:namespace/>rowIds]:checked').each(function(object) {
-      idArray.push(object.get("value"));
-    
-        });
-       if(idArray==""){
-			  alert("Please select records!");
-		  }else{
-			  var d = confirm("Are you sure you want to delete the selected education?");
-		  if(d){
-		   var url = '<%=deleteEducations%>';
-          A.io.request(url,
-         {
-          data: {  
-                <portlet:namespace />educationIds: idArray,  
-                 },
-          on: {
-               success: function() { 
-                   alert('deleted successfully');
-                   window.location='<%=listview%>';
-              },
-               failure: function() {
-                  
-                 }
-                }
-                 }
-                );
-		  																		
-		  console.log(idArray);
-	  
-      return true;
-  }
-  else
-    return false;
-}             
-      }
-    );
-  }
-);
-</aui:script><aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#addeducation');
-    node.on(
-      'click',
-      function() {
-         A.one('#editEducationAddDelete').hide();
-         A.one('#editEducationForm').show();
-                     
-      }
-    );
-  }
-);
-
  AUI().ready('event', 'node','transition',function(A){
+ A.one('#educationName').focus();
   setTimeout(function(){
     A.one('#editEducationMessage').transition('fadeOut');
-},1000)
+},2000)
  });
 
 AUI().use(
@@ -117,7 +56,7 @@ if(SessionMessages.contains(renderRequest.getPortletSession(),"educationName-emp
 					<aui:input name="educationId" type="hidden" id="educationId"  value="<%=editEducation.getEducationId()%>"/>
 					<div class="form-inline">
 							<label>Level: </label>
-					 		<input name="<portlet:namespace/>education_level" type="text" required = "required" value="<%=editEducation.getEduLevel() %>" >
+					 		<input name="<portlet:namespace/>education_level" type="text" id="educationName" value="<%=editEducation.getEduLevel() %>" >
 							<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
 							<button  type="reset" id ="editcanceleducation" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 					</div>
@@ -158,15 +97,23 @@ List<Education> educationDetails = EducationLocalServiceUtil
 		<liferay-ui:search-container-results>
 				
 		<%
-		  List<Education> educationList = educationDetails;
-				OrderByComparator orderByComparator =  CustomComparatorUtil.getEducationOrderByComparator(sortByCol, sortByType);
-		   
-		               Collections.sort(educationList,orderByComparator);
 		  
-		               results = ListUtil.subList(educationList, searchContainer.getStart(), searchContainer.getEnd());
-		               total = educationList!=null && educationList.size()!=0  ?educationList.size():0;
-               pageContext.setAttribute("results", results);
-               pageContext.setAttribute("total", total);
+		List<Education> educationList = ListUtil.subList(educationDetails, searchContainer.getStart(), searchContainer.getEnd());
+		
+		OrderByComparator orderByComparator =  CustomComparatorUtil.getEducationOrderByComparator(sortByCol, sortByType);
+   
+               Collections.sort(educationList,orderByComparator);
+     if(educationDetails.size()>5){
+    	 results = educationList;
+     }
+     else{
+           results = educationDetails;
+     }
+       total = educationDetails.size();
+       pageContext.setAttribute("results", results);
+       pageContext.setAttribute("total", total);
+		
+		
  %>
 	</liferay-ui:search-container-results>
 	<liferay-ui:search-container-row className="Education" keyProperty="educationId" modelVar="educationId"  rowVar="curRow" escapedModel="<%= true %>">

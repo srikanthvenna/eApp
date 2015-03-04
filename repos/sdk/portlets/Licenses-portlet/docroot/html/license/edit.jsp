@@ -7,72 +7,14 @@
 	<portlet:param name="mvcPath" value="/html/license/add.jsp" />
 </portlet:renderURL>
 <aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#licensedelete');
-    node.on(
-      'click',
-      function() {
-     var idArray = [];
-   A.all('input[name=<portlet:namespace/>rowIds]:checked').each(function(object) {
-      idArray.push(object.get("value"));
-    
-        });
-       if(idArray==""){
-			  alert("Please select records!");
-		  }else{
-			  var d = confirm("Are you sure you want to delete the selected license?");
-		  if(d){
-		   var url = '<%=deleteLicenses%>';
-          A.io.request(url,
-         {
-          data: {  
-                <portlet:namespace />licenseIds: idArray,  
-                 },
-          on: {
-               success: function() { 
-                   alert('deleted successfully');
-                   window.location='<%=listview%>';
-              },
-               failure: function() {
-                  
-                 }
-                }
-                 }
-                );
-		  																		
-		  console.log(idArray);
-	  
-      return true;
-  }
-  else
-    return false;
-}             
-      }
-    );
-  }
-);
-</aui:script><aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#licenseadd');
-    node.on(
-      'click',
-      function() {
-         A.one('#editLicenseAddDelete').hide();
-         A.one('#editLicenseForm').show();
-                     
-      }
-    );
-  }
-);
 
+</aui:script><aui:script>
 AUI().ready('event', 'node','transition',function(A){
+  A.one('#licenseName').focus();
   setTimeout(function(){
     A.one('#editLicenseMessage').transition('fadeOut');
-},1000)
+    A.one('#editLicenseMessage').hide();
+},2000)
  });
 
 AUI().use(
@@ -91,11 +33,6 @@ AUI().use(
 );
 
 </aui:script>
-
-
-
-</head>
-<body>
 <% 
  License editLicense = (License)portletSession.getAttribute("editLicense");
 if(SessionMessages.contains(renderRequest.getPortletSession(),"licenseName-empty-error")){%>
@@ -114,17 +51,16 @@ if(SessionMessages.contains(renderRequest.getPortletSession(),"licenseName-empty
 						<aui:input name="licenseId" type="hidden" id="licenseId"  value="<%=editLicense.getLicenseId()%>" />
 						<div class="form-inline">
 							<label>License Name: </label>
-							<input name="<portlet:namespace/>license_name" type="text" value="<%=editLicense.getLicenseName() %>" >
+							<input name="<portlet:namespace/>license_name" id="licenseName" type="text" value="<%=editLicense.getLicenseName() %>" >
 							<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
-							<button  type="reset" id ="licensecancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
+							<button  type="reset" id ="editlicensecancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 						</div>
 					</aui:form>
 				</div>
 			</div>
 		</div>
 	</div>
-  
-</body>
+
 <%
 PortletURL iteratorURL = renderResponse.createRenderURL();
 iteratorURL.setParameter("mvcPath", "/html/license/edit.jsp");
@@ -156,13 +92,17 @@ List<License> licenseDetails = LicenseLocalServiceUtil
 		<liferay-ui:search-container-results>
 				
 		<%
-            List<License> licenseList = licenseDetails;
+		 List<License> licenseList = ListUtil.subList(licenseDetails, searchContainer.getStart(),searchContainer.getEnd());
 		OrderByComparator orderByComparator =  CustomComparatorUtil.getLicensesOrderByComparator(sortByCol, sortByType);
    
                Collections.sort(licenseList,orderByComparator);
-  
-               results =ListUtil.subList(licenseList,searchContainer.getStart(),searchContainer.getEnd());
-               total =licenseList!=null && licenseList.size()!=0  ?licenseList.size():0;
+  				if(licenseDetails.size()>5){
+  					results = licenseList;
+  				}
+  				else{
+               results =licenseDetails;
+  				}
+               total =licenseDetails.size();
                pageContext.setAttribute("results", results);
                pageContext.setAttribute("total", total);
  %>
@@ -176,7 +116,7 @@ List<License> licenseDetails = LicenseLocalServiceUtil
 	<liferay-ui:search-iterator/>
 	
 </liferay-ui:search-container>
-</html>
+
 
 
 

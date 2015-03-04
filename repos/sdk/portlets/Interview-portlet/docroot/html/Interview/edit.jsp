@@ -1,8 +1,7 @@
+<%@page import="org.apache.log4j.Logger"%>
 <%@page import="com.liferay.portal.kernel.servlet.SessionMessages"%>
 <%@ include file="/html/Interview/init.jsp"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>interview</title>
 <portlet:actionURL var="saveinterview" name="saveInterview">
@@ -12,6 +11,9 @@
 	<portlet:param name="mvcPath" value="/html/Interview/add.jsp" />
 </portlet:renderURL>
 <aui:script>
+AUI().ready('event', 'node',function(A){
+A.one('#editinterview').focus();
+});
 AUI().use(
   'aui-node',
   function(A) {
@@ -28,8 +30,7 @@ AUI().use(
 );
 
 </aui:script>
-</head>
-<body>
+<% Logger log=Logger.getLogger(this.getClass().getName());%>
 <%
 Interview editinterview = (Interview) portletSession.getAttribute("editinterview");
 
@@ -54,7 +55,7 @@ Interview editinterview = (Interview) portletSession.getAttribute("editinterview
 		</aui:form>
 	</div>
 </div>
-</body>
+
 <%
 PortletURL iteratorURL = renderResponse.createRenderURL();
 iteratorURL.setParameter("mvcPath", "/html/Interview/edit.jsp");
@@ -63,19 +64,19 @@ RowChecker rowChecker = new RowChecker(renderResponse);
 PortalPreferences portalPrefs = PortletPreferencesFactoryUtil.getPortalPreferences(request); 
 String sortByCol = ParamUtil.getString(request, "orderByCol"); 
 String sortByType = ParamUtil.getString(request, "orderByType"); 
-System.out.println("sortByCol == " +sortByCol);
-System.out.println("sortByType == " +sortByType);
+log.info("sortByCol == " +sortByCol);
+log.info("sortByType == " +sortByType);
 if (Validator.isNotNull(sortByCol ) && Validator.isNotNull(sortByType )) { 
-	System.out.println("if block...");
+	log.info("if block...edit.jsp");
 portalPrefs.setValue("NAME_SPACE", "sort-by-col", sortByCol); 
 portalPrefs.setValue("NAME_SPACE", "sort-by-type", sortByCol); 
  
 } else { 
 	sortByType = portalPrefs.getValue("NAME_SPACE", "sort-by-type ", "asc");   
 }
-System.out.println("after....");
-System.out.println("sortByCol == " +sortByCol);
-System.out.println("sortByType == " +sortByType);
+log.info("after....");
+log.info("sortByCol == " +sortByCol);
+log.info("sortByType == " +sortByType);
 long groupId=themeDisplay.getLayout().getGroup().getGroupId();
 DynamicQuery interviewDynamicQuery = DynamicQueryFactoryUtil
 .forClass(Interview.class,
@@ -92,20 +93,25 @@ List<Interview> interviewDetails = InterviewLocalServiceUtil
 		<liferay-ui:search-container-results>
 				
 		<%
-		List<Interview> interviewList =  interviewDetails;
+
+		List<Interview> interviewList = ListUtil.subList(interviewDetails, searchContainer.getStart(), searchContainer.getEnd())  ;
         OrderByComparator orderByComparator = CustomComparatorUtil.getInterviewrOrderByComparator(sortByCol, sortByType);         
 
        Collections.sort(interviewList,orderByComparator);
-
-       results = ListUtil.subList(interviewList, searchContainer.getStart(), searchContainer.getEnd());
-      
+				
+       if(interviewDetails.size()>5){
+       results = ListUtil.subList(interviewDetails, searchContainer.getStart(), searchContainer.getEnd());
+       }
+       else{
+    	   results = interviewDetails;
+       }
         System.out.println("results == " +results);
        
  
-           total = interviewList!=null && interviewDetails.size()!=0?interviewDetails.size():0;
-               System.out.println("total == " +total);
-               pageContext.setAttribute("results", results);
-               pageContext.setAttribute("total", total);
+           total = interviewDetails.size();
+           System.out.println("total == " +total);
+           pageContext.setAttribute("results", results);
+           pageContext.setAttribute("total", total);
  %>
 	</liferay-ui:search-container-results>
 	<liferay-ui:search-container-row className="Interview" keyProperty="interviewId" modelVar="Interview"  rowVar="curRow" escapedModel="<%= true %>">
@@ -116,4 +122,3 @@ List<Interview> interviewDetails = InterviewLocalServiceUtil
 	<liferay-ui:search-iterator/>
 	
 </liferay-ui:search-container>
-</html>

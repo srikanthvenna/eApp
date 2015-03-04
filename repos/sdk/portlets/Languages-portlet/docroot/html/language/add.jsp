@@ -64,6 +64,7 @@ AUI().use(
       function() {
          A.one('#languageAddDelete').hide();
          A.one('#addLanguageForm').show();
+         A.one('#languageName').focus();
                      
       }
     );
@@ -74,7 +75,8 @@ AUI().use(
   A.one('#addLanguageForm').hide();
   setTimeout(function(){
     A.one('#addLanguageMessage').transition('fadeOut');
-},1000)
+     A.one('#addLanguageMessage').hide();
+},2000)
  });
 
 
@@ -94,9 +96,6 @@ AUI().use(
 );
 
 </aui:script>
-</head>
-
-<body>
 <% if(SessionMessages.contains(renderRequest.getPortletSession(),"languageName-empty-error")){%>
 <p id="addLanguageMessage" class="alert alert-error"><liferay-ui:message key="Please Enter LanguageName"/></p>
 <%} 
@@ -123,7 +122,7 @@ AUI().use(
 						<aui:input name="languageId" type="hidden" id="languageId" />
 						<div class="form-inline">
 							<label>Language Name: </label>
-							<input name="<portlet:namespace/>language_name" type="text">
+							<input name="<portlet:namespace/>language_name" id="languageName" type="text">
 							<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
 							<button  type="reset" id ="languagecancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 						</div>
@@ -132,8 +131,7 @@ AUI().use(
 			</div>
 		</div>
 	</div>
-	
-</body>
+
 
 <%
 
@@ -162,8 +160,7 @@ DynamicQuery languageDynamicQuery = DynamicQueryFactoryUtil
 		PortletClassLoaderUtil.getClassLoader());
 languageDynamicQuery.add(PropertyFactoryUtil.forName("groupId")
 .eq(groupId));
-List<Language> languageDetails = LanguageLocalServiceUtil
-.dynamicQuery(languageDynamicQuery);
+List<Language> languageDetails = LanguageLocalServiceUtil.dynamicQuery(languageDynamicQuery);
 %>
 <%!
   com.liferay.portal.kernel.dao.search.SearchContainer<Language> searchContainer;
@@ -177,13 +174,17 @@ List<Language> languageDetails = LanguageLocalServiceUtil
 	<liferay-ui:search-container-results>
 
 		<%
-            List<Language> languageList = languageDetails;
+            List<Language> languageList = ListUtil.subList(languageDetails, searchContainer.getStart(), searchContainer.getEnd());
 		OrderByComparator orderByComparator =  CustomComparatorUtil.getLanguagesOrderByComparator(sortByCol, sortByType);
    
                Collections.sort(languageList,orderByComparator);
-  
-               results = ListUtil.subList(languageList, searchContainer.getStart(), searchContainer.getEnd());
-               total = languageList!=null && languageList.size()!=0?languageList.size():0;
+  				if(languageDetails.size()>5){
+  					results = languageList;
+  				}
+  				else{
+               results = languageDetails;
+  				}
+               total = languageDetails.size();
                pageContext.setAttribute("results", results);
                pageContext.setAttribute("total", total);
 

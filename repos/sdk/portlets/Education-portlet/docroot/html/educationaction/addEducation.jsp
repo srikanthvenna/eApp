@@ -9,6 +9,7 @@
 </portlet:renderURL>
 
 <aui:script>
+
 AUI().use(
   'aui-node',
   function(A) {
@@ -65,6 +66,7 @@ AUI().use(
       function() {
          A.one('#educationAddDelete').hide();
          A.one('#addEducationForm').show();
+         A.one('#educationName').focus();
                      
       }
     );
@@ -72,11 +74,12 @@ AUI().use(
 );
 
  AUI().ready('event', 'node','transition',function(A){
-A.one('#addEducationForm').hide();
+ A.one('#addEducationForm').hide();
 setTimeout(function(){
 A.one('#addEducationMessage').transition('fadeOut');
-},1000)
 A.one('#addEducationMessage').hide();
+},2000)
+
 });
 
 
@@ -96,9 +99,7 @@ AUI().use(
 );
 
 </aui:script>
-</head>
 
-<body>
 <% 
 if(SessionMessages.contains(renderRequest.getPortletSession(),"educationName-empty-error")){%>
 <p id="addEducationMessage" class="alert alert-error"><liferay-ui:message key="Please Enter Education Name"/></p>
@@ -125,7 +126,7 @@ if(SessionMessages.contains(renderRequest.getPortletSession(),"educationName-emp
 						<aui:input name="educationId" type="hidden" id="educationId" />
 						<div class="form-inline">
 							<label>Level: </label>
-							<input name="<portlet:namespace/>education_level" type="text">
+							<input name="<portlet:namespace/>education_level" id="educationName" type="text">
 							<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
 							<button  type="reset" id ="canceleducation" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 						</div>
@@ -134,8 +135,7 @@ if(SessionMessages.contains(renderRequest.getPortletSession(),"educationName-emp
 			</div>
 		</div>
 	</div>
-	
-</body>
+
 
 <%
 
@@ -180,13 +180,18 @@ List<Education> educationDetails = EducationLocalServiceUtil
 	<liferay-ui:search-container-results>
 
 		<%
-		  List<Education> educationList = educationDetails;
+		  List<Education> educationList = ListUtil.subList(educationDetails, searchContainer.getStart(), searchContainer.getEnd());
+		
 				OrderByComparator orderByComparator =  CustomComparatorUtil.getEducationOrderByComparator(sortByCol, sortByType);
 		   
 		               Collections.sort(educationList,orderByComparator);
-		  
-		               results = ListUtil.subList(educationList, searchContainer.getStart(), searchContainer.getEnd());
-		               total = educationList!=null && educationList.size()!=0  ?educationList.size():0;
+		     if(educationDetails.size()>5){
+		    	 results = educationList;
+		     }
+		     else{
+		           results = educationDetails;
+		     }
+		       total = educationDetails.size();
                pageContext.setAttribute("results", results);
                pageContext.setAttribute("total", total);
 

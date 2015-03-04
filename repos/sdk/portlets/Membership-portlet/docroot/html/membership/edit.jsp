@@ -1,3 +1,9 @@
+<%@page import="org.apache.log4j.Logger"%>
+<%@page import="com.liferay.portal.kernel.util.ListUtil"%>
+<%@page import="com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil"%>
+<%@page import="com.liferay.portal.kernel.dao.orm.DynamicQuery"%>
+<%@page import="com.liferay.portal.kernel.portlet.PortletClassLoaderUtil"%>
+<%@page import="com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil"%>
 <%@page import="com.liferay.portal.kernel.servlet.SessionMessages"%>
 <%@ include file="/html/membership/init.jsp" %>
 <portlet:actionURL var="updateMemberships" name="updateMembership">
@@ -6,74 +12,15 @@
 <portlet:renderURL var="listview">
 	<portlet:param name="mvcPath" value="/html/membership/add.jsp" />
 </portlet:renderURL>
-
 <aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#membershipdelete');
-    node.on(
-      'click',
-      function() {
-     var idArray = [];
-     A.all('input[name=<portlet:namespace/>rowIds]:checked').each(function(object) {
-      idArray.push(object.get("value"));
-    
-        });
-       if(idArray==""){
-			  alert("Please select records!");
-		  }else{
-			  var d = confirm("Are you sure you want to delete the selected membership?");
-		  if(d){
-		   var url = '<%=deleteMemberships%>';
-          A.io.request(url,
-         {
-          data: {  
-                <portlet:namespace />membershipIds: idArray,  
-                 },
-          on: {
-               success: function() { 
-                   alert('deleted successfully');
-                   window.location='<%=listview%>';
-              },
-               failure: function() {
-                  
-                 }
-                }
-                 }
-                );
-		  																		
-		  console.log(idArray);
-	  
-      return true;
-  }
-  else
-    return false;
-}             
-      }
-    );
-  }
-);
-</aui:script><aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#membershipadd');
-    node.on(
-      'click',
-      function() {
-         A.one('#editMembershipAddDelete').hide();
-         A.one('#editMembershipForm').show();
-                     
-      }
-    );
-  }
-);
 
 AUI().ready('event', 'node','transition',function(A){
+ A.one('#membershipName').focus();
   setTimeout(function(){
+  A.one('#membershipName').focus();
     A.one('#editMembershipMessage').transition('fadeOut');
-},1000)
+    A.one('#editMembershipMessage').hide();
+},2000)
  });
 
 AUI().use(
@@ -94,8 +41,7 @@ AUI().use(
 
 
 
-</head>
-<body>
+<% Logger log=Logger.getLogger(this.getClass().getName());%>
 <% if(SessionMessages.contains(renderRequest.getPortletSession(),"membershipName-empty-error")){%>
 <p id="editMembershipMessage" class="alert error-alert"><liferay-ui:message key="Please Enter MembershipName"/></p>
 <%}
@@ -113,14 +59,14 @@ Membership editMembership =(Membership) portletSession.getAttribute("editMembers
 					<aui:input name="membershipId" type="hidden" id="membershipId" value="<%=editMembership.getMembershipId() %>"/>
 					<div class="form-inline">
 						<label>Membership Name: </label>
-						<input name="<portlet:namespace/>membership_name" type="text" value="<%=editMembership.getMembershipName() %>">
+						<input name="<portlet:namespace/>membership_name" id="membershipName" type="text" value="<%=editMembership.getMembershipName() %>">
 						<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
-						<button  type="reset" id ="membershipcancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
+						<button  type="reset" id ="editmembershipcancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 					</div>
 				</aui:form>
 			</div>
 		</div>
-</body>
+
 <%
 PortletURL iteratorURL = renderResponse.createRenderURL();
 iteratorURL.setParameter("mvcPath", "/html/membership/edit.jsp");
@@ -136,24 +82,35 @@ portalPrefs.setValue("NAME_SPACE", "sort-by-type", sortByCol);
 } else { 
 	sortByType = portalPrefs.getValue("NAME_SPACE", "sort-by-type ", "asc");   
 }
+long groupId= themeDisplay.getLayout().getGroup().getGroupId();
+log.info("groupId == "+groupId);
+DynamicQuery membershipQuery = DynamicQueryFactoryUtil.forClass(Membership.class,PortletClassLoaderUtil.getClassLoader());
+
+membershipQuery.add(PropertyFactoryUtil.forName("groupId").eq(groupId));
 %>
 <%!
   com.liferay.portal.kernel.dao.search.SearchContainer<Membership> searchContainer;
 %>
-<liferay-ui:search-container orderByCol="<%=sortByCol %>" orderByType="<%=sortByType %>" rowChecker="<%= new RowChecker(renderResponse) %>"  delta="5" emptyResultsMessage="No records is available for Jobcategory"   deltaConfigurable="true"   iteratorURL="<%=iteratorURL%>">
+<liferay-ui:search-container orderByCol="<%=sortByCol %>" orderByType="<%=sortByType %>" rowChecker="<%= new RowChecker(renderResponse) %>"  delta="5" emptyResultsMessage="No records is available for Memberships"   deltaConfigurable="true"   iteratorURL="<%=iteratorURL%>">
 		<liferay-ui:search-container-results>
 				
 		<%
-            List<Membership> listOfMemberships = MembershipLocalServiceUtil.getMemberships(searchContainer.getStart(), searchContainer.getEnd());
-            OrderByComparator orderByComparator = CustomComparatorUtil.getMembershipOrderByComparator(sortByCol, sortByType);         
-  
-           Collections.sort(listOfMemberships,orderByComparator);
-  
-          results = listOfMemberships;
-          
-           
-     
-               total = MembershipLocalServiceUtil.getMembershipsCount();
+            List<Membership> membershipList = MembershipLocalServiceUtil.dynamicQuery(membershipQuery);
+            List<Membership> pageList = ListUtil.subList(membershipList, searchContainer.getStart(), searchContainer.getEnd());
+		OrderByComparator orderByComparator =  CustomComparatorUtil.getMembershipOrderByComparator(sortByCol, sortByType);
+   
+               Collections.sort(pageList,orderByComparator);
+               
+               if(membershipList.size()>5){
+            	   
+            	   results = ListUtil.subList(membershipList, searchContainer.getStart(), searchContainer.getEnd());
+            	   
+               }
+               else{
+            	   results = membershipList;
+               }
+               
+               total = membershipList.size();
                pageContext.setAttribute("results", results);
                pageContext.setAttribute("total", total);
  %>
@@ -167,7 +124,7 @@ portalPrefs.setValue("NAME_SPACE", "sort-by-type", sortByCol);
 	<liferay-ui:search-iterator/>
 	
 </liferay-ui:search-container>
-</html>
+
 
 
 

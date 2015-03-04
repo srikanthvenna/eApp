@@ -6,72 +6,12 @@
 	<portlet:param name="mvcPath" value="/html/language/add.jsp" />
 </portlet:renderURL>
 <aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#languagedelete');
-    node.on(
-      'click',
-      function() {
-     var idArray = [];
-      A.all('input[name=<portlet:namespace/>rowIds]:checked').each(function(object) {
-      idArray.push(object.get("value"));
-    
-        });
-       if(idArray==""){
-			  alert("Please select records!");
-		  }else{
-			  var d = confirm("Are you sure you want to delete the selected languages ?");
-		  if(d){
-		   var url = '<%=deleteLanguages%>';
-          A.io.request(url,
-         {
-          data: {  
-                <portlet:namespace />languageIds: idArray,  
-                 },
-          on: {
-               success: function() { 
-                   alert('deleted successfully');
-                   window.location='<%=listview%>';
-              },
-               failure: function() {
-                  
-                 }
-                }
-                 }
-                );
-		  																		
-		  console.log(idArray);
-	  
-      return true;
-  }
-  else
-    return false;
-}             
-      }
-    );
-  }
-);
-</aui:script><aui:script>
-AUI().use(
-  'aui-node',
-  function(A) {
-    var node = A.one('#languageadd');
-    node.on(
-      'click',
-      function() {
-         A.one('#editLanguageAddDelete').hide();
-         A.one('#editLanguageForm').show();
-                     
-      }
-    );
-  }
-);
 
  AUI().ready('event', 'node','transition',function(A){
+  A.one('#languageName').focus();
   setTimeout(function(){
     A.one('#editLanguageMessage').transition('fadeOut');
-},1000)
+},2000)
  });
 
 AUI().use(
@@ -113,7 +53,7 @@ AUI().use(
 						<aui:input name="languageId" type="hidden" id="languageId" value="<%=editLanguage.getLanguageId()%>"/>
 						<div class="form-inline">
 							<label>Language Name: </label>
-							<input name="<portlet:namespace/>language_name" type="text" value="<%=editLanguage.getLanguageName()%>">
+							<input name="<portlet:namespace/>language_name" id="languageName" type="text" value="<%=editLanguage.getLanguageName()%>">
 							<button type="submit" class="btn btn-primary"><i class="icon-ok"></i> Submit</button>
 							<button  type="reset" id ="languagecancel" class="btn btn-danger"><i class="icon-remove"></i> Cancel</button>
 						</div>
@@ -154,13 +94,17 @@ List<Language> languageDetails = LanguageLocalServiceUtil
 		<liferay-ui:search-container-results>
 				
 		<%
-		   List<Language> languageList = languageDetails;
-			OrderByComparator orderByComparator =  CustomComparatorUtil.getLanguagesOrderByComparator(sortByCol, sortByType);
-	   
-	               Collections.sort(languageList,orderByComparator);
-	  
-	               results = ListUtil.subList(languageList, searchContainer.getStart(), searchContainer.getEnd());
-	               total = languageList!=null && languageList.size()!=0?languageList.size():0;
+		List<Language> languageList = ListUtil.subList(languageDetails, searchContainer.getStart(), searchContainer.getEnd());
+		OrderByComparator orderByComparator =  CustomComparatorUtil.getLanguagesOrderByComparator(sortByCol, sortByType);
+   
+               Collections.sort(languageList,orderByComparator);
+  				if(languageDetails.size()>5){
+  					results = languageList;
+  				}
+  				else{
+               results = languageDetails;
+  				}
+               total = languageDetails.size();
                pageContext.setAttribute("results", results);
                pageContext.setAttribute("total", total);
  %>
